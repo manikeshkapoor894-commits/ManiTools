@@ -1,0 +1,125 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ManiTools - Free Online Tools</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#172033}
+header{background:#172b4d;color:white;padding:30px 15px;text-align:center}
+header h1{margin:0;font-size:32px}
+header p{color:#dce6f5}
+.container{max-width:850px;margin:25px auto;padding:15px}
+.tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px}
+.card{background:white;padding:20px;border-radius:14px;box-shadow:0 3px 12px #0001}
+input,select,button{width:100%;padding:12px;margin:8px 0;border-radius:8px;border:1px solid #ccd3df}
+button{background:#1769e0;color:white;border:0;font-weight:bold}
+footer{text-align:center;padding:25px;color:#667085}
+</style>
+</head>
+<body>
+<header>
+<h1>ManiTools</h1>
+<p>Free Online Image and PDF Tools for Everyone</p>
+</header>
+<main class="container">
+<h2>Our Free Online Tools</h2>
+<div class="tools">
+<section class="card">
+<h2>Image Compressor</h2>
+<input type="file" id="compressFile" accept="image/*">
+<label>Image Quality</label>
+<input type="range" id="quality" min="10" max="100" value="75">
+<button onclick="compressImage()">Compress Image</button>
+</section>
+<section class="card">
+<h2>Image Converter</h2>
+<input type="file" id="convertFile" accept="image/*">
+<select id="format">
+<option value="image/png">PNG</option>
+<option value="image/jpeg">JPG</option>
+</select>
+<button onclick="convertImage()">Convert Image</button>
+</section>
+<section class="card">
+<h2>Image Resizer</h2>
+<input type="file" id="resizeFile" accept="image/*">
+<input type="number" id="width" placeholder="Width in pixels">
+<input type="number" id="height" placeholder="Height in pixels">
+<button onclick="resizeImage()">Resize Image</button>
+</section>
+</div>
+<p id="status"></p>
+</main>
+<footer>© 2026 ManiTools. All rights reserved.</footer>
+<script>
+function processImage(file,callback){
+if(!file||!file.type.startsWith("image/")){
+alert("Please select an image.");
+return;
+}
+const url=URL.createObjectURL(file);
+const img=new Image();
+img.onload=()=>{
+callback(img);
+URL.revokeObjectURL(url);
+};
+img.onerror=()=>{
+alert("Could not open image.");
+URL.revokeObjectURL(url);
+};
+img.src=url;
+}
+function download(canvas,type,name,quality){
+canvas.toBlob(blob=>{
+if(!blob){alert("Processing failed.");return;}
+const url=URL.createObjectURL(blob);
+const a=document.createElement("a");
+a.href=url;
+a.download=name;
+a.click();
+URL.revokeObjectURL(url);
+document.getElementById("status").textContent="Image ready!";
+},type,quality);
+}
+function compressImage(){
+const file=document.getElementById("compressFile").files[0];
+processImage(file,img=>{
+const c=document.createElement("canvas");
+c.width=img.width;c.height=img.height;
+c.getContext("2d").drawImage(img,0,0);
+download(c,"image/jpeg","compressed.jpg",document.getElementById("quality").value/100);
+});
+}
+function convertImage(){
+const file=document.getElementById("convertFile").files[0];
+const type=document.getElementById("format").value;
+processImage(file,img=>{
+const c=document.createElement("canvas");
+c.width=img.width;c.height=img.height;
+const ctx=c.getContext("2d");
+if(type==="image/jpeg"){ctx.fillStyle="#fff";ctx.fillRect(0,0,c.width,c.height);}
+ctx.drawImage(img,0,0);
+download(c,type,type==="image/png"?"converted.png":"converted.jpg");
+});
+}
+function resizeImage(){
+const file=document.getElementById("resizeFile").files[0];
+const w=Number(document.getElementById("width").value);
+const h=Number(document.getElementById("height").value);
+if(!Number.isInteger(w)||!Number.isInteger(h)||w<1||h<1||w>10000||h>10000){
+alert("Enter valid width and height.");
+return;
+}
+processImage(file,img=>{
+const c=document.createElement("canvas");
+c.width=w;c.height=h;
+c.getContext("2d").drawImage(img,0,0,w,h);
+download(c,"image/png","resized.png");
+});
+}
+</script>
+</body>
+</html>
